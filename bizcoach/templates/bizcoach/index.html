@@ -1,0 +1,117 @@
+<!-- templates/bizcoach/index.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leap</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            LEAP
+            <img src="{% static 'img/reset_icon.png' %}" alt="reset" class="reset-icon" id="reset-chat">
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div id="greeting" class="center-content">
+                <p>Hi there, what brought you here today?</p>
+                <div class="suggestions">
+                    <div class="suggestion" data-question="Question 1">Question 1</div>
+                    <div class="suggestion" data-question="Question 2">Question 2</div>
+                    <div class="suggestion" data-question="Question 3">Question 3</div>
+                    <div class="suggestion" data-question="Question 4">Question 4</div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message" placeholder="Type a message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <!-- Inline modal dialog -->
+    <div id="reset-modal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to clear the chat history and start from scratch?</p>
+            <button id="confirm-reset">Yes</button>
+            <button id="cancel-reset">No</button>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            function hideSuggestions() {
+                $('#greeting').remove();
+            }
+
+            function bindSuggestionClick() {
+                $('.suggestion').click(function() {
+                    var question = $(this).data('question');
+                    $('#message').val(question);
+                    hideSuggestions();
+                });
+            }
+
+            // Extracted sendMessage function
+            function sendMessage() {
+                var message = $('#message').val();
+                if (message.trim() !== '') {
+                    hideSuggestions();
+                    $.post("{% url 'send_message' %}", {
+                        'message': message,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    }, function(data) {
+                        if (data.message) {
+                            $('#chat-messages').append('<div class="message-container right"><div class="message right">' + data.message + '</div></div>');
+                            $('#chat-messages').append("<div class='message-container left'><img src='{% static 'img/woman_icon.png' %}' alt='icon' class='icon'><div class='message left'>" + data.response + '</div></div>');
+                            $('#message').val('');
+                            var chatMessages = document.getElementById('chat-messages');
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        }
+                    });
+                }
+            }
+
+            // Updated to use the sendMessage function
+            $('#send-button').click(sendMessage);
+
+            // Added keypress event listener
+            $('#message').keypress(function(event) {
+                if (event.which == 13) { // Enter key pressed
+                    sendMessage();
+                }
+            });
+
+            $('#reset-chat').click(function() {
+                $('#reset-modal').css('display', 'flex'); // Show the modal dialog
+            });
+
+            $('#confirm-reset').click(function() {
+                $('#chat-messages').empty();
+                $('#chat-messages').append(
+                    `<div id="greeting" class="center-content">
+                        <p>Hi there, what brought you here today?</p>
+                        <div class="suggestions">
+                            <div class="suggestion" data-question="Question 1">Question 1</div>
+                            <div class="suggestion" data-question="Question 2">Question 2</div>
+                            <div class="suggestion" data-question="Question 3">Question 3</div>
+                            <div class="suggestion" data-question="Question 4">Question 4</div>
+                        </div>
+                    </div>`
+                );
+                bindSuggestionClick(); // Rebind click handler for suggestions
+                $('#reset-modal').hide(); // Hide the modal dialog
+            });
+
+            $('#cancel-reset').click(function() {
+                $('#reset-modal').hide(); // Hide the modal dialog
+            });
+
+            bindSuggestionClick(); // Initial bind of click handler for suggestions
+        });
+    </script>
+</body>
+</html>

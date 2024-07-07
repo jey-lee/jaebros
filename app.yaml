@@ -1,0 +1,12 @@
+runtime: python312  # or any other version you are using
+
+entrypoint: gunicorn -b :$PORT projectone.wsgi:application
+
+handlers:
+- url: /static
+  static_dir: static/
+- url: /.*
+  script: auto
+
+env_variables:
+    APPENGINE_URL: https://jaebros.wm.r.appspot.com
