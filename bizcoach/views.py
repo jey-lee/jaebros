@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import threading
 
-OPENAI_API_KEY = 'your_open_ai_key'
+OPENAI_API_KEY = 'my_openai_key'
 openai.api_key = OPENAI_API_KEY
 
 # Function to call the OpenAI API

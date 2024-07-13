@@ -13,17 +13,19 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            LEAP
+            <a href="{% url 'index' %}" class="header-link">LEAP</a>
             <img src="{% static 'img/reset_icon.png' %}" alt="reset" class="reset-icon" id="reset-chat">
         </div>
         <div class="chat-messages" id="chat-messages">
             <div id="greeting" class="center-content">
-                <p>Hi there, what brought you here today?</p>
+                <p class="greeting-text">Hi there!</p>
+                <p class="greeting-text">What brought you here today?</p>
+                <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
                 <div class="suggestions">
-                    <div class="suggestion" data-question="Question 1">Question 1</div>
-                    <div class="suggestion" data-question="Question 2">Question 2</div>
-                    <div class="suggestion" data-question="Question 3">Question 3</div>
-                    <div class="suggestion" data-question="Question 4">Question 4</div>
+                    <div class="suggestion" data-question="What are the best practices for effective leadership?">What are the best practices for effective leadership?</div>
+                    <div class="suggestion" data-question="How can I handle conflict and difficult conversations within my team?">How can I handle conflict and difficult conversations within my team?</div>
+                    <div class="suggestion" data-question="How can I develop and retain top talent within my team?">How can I develop and retain top talent within my team?</div>
+                    <div class="suggestion" data-question="What techniques can I use to provide constructive feedback?">What techniques can I use to provide constructive feedback?</div>
                 </div>
             </div>
         </div>
@@ -60,19 +62,38 @@
                 var message = $('#message').val();
                 if (message.trim() !== '') {
                     hideSuggestions();
+                    
+                    // Append the user's message immediately
+                    $('#chat-messages').append('<div class="message-container right"><div class="message right">' + message + '</div></div>');
+                    $('#message').val('');
+                    var chatMessages = document.getElementById('chat-messages');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Send the message to the server
                     $.post("{% url 'send_message' %}", {
                         'message': message,
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     }, function(data) {
                         if (data.message) {
-                            $('#chat-messages').append('<div class="message-container right"><div class="message right">' + data.message + '</div></div>');
-                            $('#chat-messages').append("<div class='message-container left'><img src='{% static 'img/woman_icon.png' %}' alt='icon' class='icon'><div class='message left'>" + data.response + '</div></div>');
-                            $('#message').val('');
-                            var chatMessages = document.getElementById('chat-messages');
-                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                            // Typing effect for the response message
+                            var responseContainer = $("<div class='message-container left'><img src='{% static 'img/lady_icon.png' %}' alt='icon' class='icon'><div class='message left'></div></div>");
+                            $('#chat-messages').append(responseContainer);
+                            typeMessage(responseContainer.find('.message.left'), data.response);
                         }
                     });
                 }
+            }
+
+            function typeMessage(element, message) {
+                var index = 0;
+                function type() {
+                    if (index < message.length) {
+                        element.append(message.charAt(index));
+                        index++;
+                        setTimeout(type, 10); // Adjust typing speed here
+                    }
+                }
+                type();
             }
 
             // Updated to use the sendMessage function
@@ -93,12 +114,14 @@
                 $('#chat-messages').empty();
                 $('#chat-messages').append(
                     `<div id="greeting" class="center-content">
-                        <p>Hi there, what brought you here today?</p>
+                        <p class="greeting-text">Hi there!</p>
+                        <p class="greeting-text">What brought you here today?</p>
+                        <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
                         <div class="suggestions">
-                            <div class="suggestion" data-question="Question 1">Question 1</div>
-                            <div class="suggestion" data-question="Question 2">Question 2</div>
-                            <div class="suggestion" data-question="Question 3">Question 3</div>
-                            <div class="suggestion" data-question="Question 4">Question 4</div>
+                            <div class="suggestion" data-question="What are the best practices for effective leadership?">What are the best practices for effective leadership?</div>
+                            <div class="suggestion" data-question="How can I handle conflict and difficult conversations within my team?">How can I handle conflict and difficult conversations within my team?</div>
+                            <div class="suggestion" data-question="How can I develop and retain top talent within my team?">How can I develop and retain top talent within my team?</div>
+                            <div class="suggestion" data-question="What techniques can I use to provide constructive feedback?">What techniques can I use to provide constructive feedback?</div>
                         </div>
                     </div>`
                 );

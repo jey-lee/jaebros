@@ -156,7 +156,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Add this to tell Django to collect static files in the specified STATIC_ROOT
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'staticfiles'),
+    os.path.join(BASE_DIR, 'bizcoach', 'static'),
 ]
 
 # Ensure the additional directory exists
