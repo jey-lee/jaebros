@@ -1,10 +1,10 @@
 import openai
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.conf import settings
 import threading
 
-OPENAI_API_KEY = 'my_openai_key'
-openai.api_key = OPENAI_API_KEY
+openai.api_key = settings.OPENAI_KEY
 
 # Function to call the OpenAI API
 def call_openai_api(prompt, response_list):

@@ -22,6 +22,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Determine if running on Google App Engine
 GAE_INSTANCE = os.getenv('GAE_INSTANCE')
+OPENAI_KEY = os.getenv('OPENAI_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
