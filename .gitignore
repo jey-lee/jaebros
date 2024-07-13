@@ -16,6 +16,8 @@ local_settings.py
 db.sqlite3
 static/
 staticfiles/
+!bizcoach/static/
+!bizcoach/static/*
 
 # Environment variables
 .env

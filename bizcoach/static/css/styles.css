@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+body, button, input, textarea {
+    font-family: 'Quicksand', sans-serif; /* Ensure all elements use the font */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #D9D9D9;
+    overflow: hidden; /* Prevent scrolling */
+}
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+.chat-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    color: #545251;
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+    z-index: 10; /* Ensure it stays on top */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.reset-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    box-sizing: border-box; /* Ensure it does not overflow */
+}
+
+
+.chat-messages {
+    padding: 0px 10px 00px 10px; /* Adjust padding to account for header and input */
+    flex: 1;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+    background-color: #D9D9D9;
+    color: #545251;
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px; /* Prevent messages from being hidden under the header */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.center-content {
+    text-align: center;
+    width: 100%;
+    margin: auto;
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.suggestion {
+    background-color: #EB8D42;
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex: 1 1 calc(50% - 10px);
+    max-width: calc(50% - 10px);
+    text-align: center;
+}
+
+.message-container {
+    display: flex;
+    margin: 10px 10px;
+    padding-top: 20px;
+    margin-top: 20px;
+    align-items: top;
+}
+
+.message-container.right {
+    justify-content: flex-end;
+}
+
+.message-container.left {
+    justify-content: flex-start;
+}
+
+.message {
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 60%;
+}
+
+.message.right {
+    background-color: #EB8D42; /* Background color for the user message */
+    color: white;
+    border-radius: 20px; /* Add rounded edges to sent messages */
+}
+
+.message.left {
+    background-color: white; /* Background color for the response */
+    color: #545251; /* Text color for the response */
+}
+
+.icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    margin-top: 10px;
+    align-self: flex-start; /* Align the icon to the top */
+}
+
+.chat-input {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    padding: 10px;
+    background-color: #e7e4e3; /* Add a background color */
+    z-index: 10; /* Ensure it stays on top */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 50px; /* Make the corners circular */
+    margin-right: 10px;
+    font-family: 'Quicksand', sans-serif; /* Ensure input uses the font */
+    box-sizing: border-box; /* Ensure it does not overflow */
+}
+
+.chat-input button {
+    padding: 10px 20px;
+    background: #EB8D42; /* Primary color for the button */
+    color: #545251; /* Text color */
+    border: none;
+    border-radius: 50px; /* Make the corners circular */
+    cursor: pointer;
+    font-family: 'Quicksand', sans-serif; /* Ensure button uses the font */
+    box-sizing: border-box; /* Ensure it does not overflow */
+}
+
+
+/* Modal Styles */
+.modal {
+    display: none; /* Ensure it is hidden by default */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    justify-content: center; /* Align content to center */
+    align-items: center; /* Align content to center */
+}
+
+
+
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.modal-content button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Quicksand', sans-serif; /* Ensure button uses the font */
+}
+
+#confirm-reset {
+    background-color: #EB8D42;
+    color: white;
+}
+
+#cancel-reset {
+    background-color: #ddd;
+    color: #545251;
+}
+
+/* Add this to your CSS file */
+.greeting-text {
+    font-size: 24px; /* Enlarge the text */
+    font-weight: bold; /* Make the text bold */
+    background: linear-gradient(90deg, #ff7e5f, #feb47b); /* Gradient color representing AI */
+    -webkit-background-clip: text; /* For Safari/Chrome */
+    -webkit-text-fill-color: transparent; /* For Safari/Chrome */
+    background-clip: text; /* Standard property */
+    text-fill-color: transparent; /* Standard property */
+    text-align: center; /* Left-align the text */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+    line-height: 1.2; /* Adjust line height if needed */
+}
+
+/* Add this to your CSS file */
+.intro-text {
+    text-align: center;
+    padding: 10px; /* Remove default padding */
+    padding-left: 50px;
+    padding-right: 50px;
+    font-size: 16px; /* Optional: Adjust the font size as needed */
+}
+
+.header-link {
+    text-decoration: none;
+    color: inherit;
+}
