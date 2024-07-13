@@ -212,7 +212,6 @@ body {
     -webkit-background-clip: text; /* For Safari/Chrome */
     -webkit-text-fill-color: transparent; /* For Safari/Chrome */
     background-clip: text; /* Standard property */
-    text-fill-color: transparent; /* Standard property */
     text-align: center; /* Left-align the text */
     margin: 0; /* Remove default margin */
     padding: 0; /* Remove default padding */
