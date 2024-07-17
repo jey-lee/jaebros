@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -45,6 +46,13 @@
     </div>
     <script>
         $(document).ready(function() {
+
+            // Configure marked with sanitize option
+            marked.setOptions({
+                gfm: true,
+                breaks: true
+            });
+            
             function hideSuggestions() {
                 $('#greeting').remove();
             }
@@ -64,9 +72,14 @@
                     hideSuggestions();
                     
                     // Append the user's message immediately
-                    $('#chat-messages').append('<div class="message-container right"><div class="message right">' + message + '</div></div>');
+                    $('#chat-messages').append('<div class="message-container right"><div class="message right">' + marked.parse(message) + '</div></div>');
                     $('#message').val('');
                     var chatMessages = document.getElementById('chat-messages');
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Show loading animation
+                    var responseContainer = $("<div class='message-container left'><img src='{% static 'img/lady_icon.png' %}' alt='icon' class='icon'><div class='message left'><div class='loading-dots'><span>.</span><span>.</span><span>.</span></div></div></div>");
+                    $('#chat-messages').append(responseContainer);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
 
                     // Send the message to the server
@@ -76,9 +89,11 @@
                     }, function(data) {
                         if (data.message) {
                             // Typing effect for the response message
-                            var responseContainer = $("<div class='message-container left'><img src='{% static 'img/lady_icon.png' %}' alt='icon' class='icon'><div class='message left'></div></div>");
-                            $('#chat-messages').append(responseContainer);
-                            typeMessage(responseContainer.find('.message.left'), data.response);
+                            var cleanedResponse = data.response.replace(/【[^】]*】/g, '');
+                            var responseMessage = marked.parse(cleanedResponse);
+                            var messageElement = responseContainer.find('.message.left');
+                            messageElement.find('.loading-dots').remove(); // Remove loading animation
+                            typeMessage(messageElement, responseMessage);
                         }
                     });
                 }
@@ -88,9 +103,11 @@
                 var index = 0;
                 function type() {
                     if (index < message.length) {
-                        element.append(message.charAt(index));
+                        element.html(message.substring(0, index + 1));
+                        var chatMessages = document.getElementById('chat-messages');
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                         index++;
-                        setTimeout(type, 10); // Adjust typing speed here
+                        setTimeout(type, 5); // Adjust typing speed here
                     }
                 }
                 type();

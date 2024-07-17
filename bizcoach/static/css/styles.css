@@ -14,6 +14,11 @@ body {
     overflow: hidden; /* Prevent scrolling */
 }
 
+p {
+    margin: 0;
+    padding: 0;
+}
+
 .chat-container {
     flex: 1;
     display: flex;
@@ -46,7 +51,7 @@ body {
 
 
 .chat-messages {
-    padding: 0px 10px 00px 10px; /* Adjust padding to account for header and input */
+    padding: 50px 10px 50px 10px; /* Adjust padding to account for header and input */
     flex: 1;
     overflow-y: auto;
     border-bottom: 1px solid #ddd;
@@ -55,6 +60,7 @@ body {
     display: flex;
     flex-direction: column;
     margin-top: 50px; /* Prevent messages from being hidden under the header */
+    margin-bottom: 80px; /* Prevent messages from being hidden under the header */
     box-sizing: border-box; /* Include padding in the element's total width and height */
 }
 
@@ -84,9 +90,9 @@ body {
 
 .message-container {
     display: flex;
-    margin: 10px 10px;
-    padding-top: 20px;
-    margin-top: 20px;
+    margin: 5px 5px;
+    padding-top: 5px;
+    margin-top: 5px;
     align-items: top;
 }
 
@@ -107,7 +113,7 @@ body {
 .message.right {
     background-color: #EB8D42; /* Background color for the user message */
     color: white;
-    border-radius: 20px; /* Add rounded edges to sent messages */
+    border-radius: 10px; /* Add rounded edges to sent messages */
 }
 
 .message.left {
@@ -230,4 +236,29 @@ body {
 .header-link {
     text-decoration: none;
     color: inherit;
+    font-size: 26px;
+}
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    20% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
+
+.loading-dots {
+    display: inline-block;
+    font-size: 18px;
+    margin-left: 5px;
+}
+
+.loading-dots span {
+    animation: blink 1.4s infinite both;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
 }
