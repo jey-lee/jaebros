@@ -135,8 +135,8 @@ p {
     width: 100%;
     display: flex;
     padding: 10px;
-    background-color: #e7e4e3; /* Add a background color */
-    z-index: 10; /* Ensure it stays on top */
+    background-color: #fff; /* Add a background color */
+    z-index: 999; /* Ensure it stays below the modal */
     box-sizing: border-box; /* Include padding in the element's total width and height */
 }
 
@@ -166,22 +166,19 @@ p {
 .modal {
     display: none; /* Ensure it is hidden by default */
     position: fixed;
-    z-index: 1;
+    z-index: 1000; /* Set a high z-index to cover all content */
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.4); /* Ensure gray background */
     justify-content: center; /* Align content to center */
     align-items: center; /* Align content to center */
 }
 
-
-
-
 .modal-content {
-    background-color: #fefefe;
+    background-color: #D9D9D9;
     margin: auto;
     padding: 20px;
     border: 1px solid #888;
@@ -261,4 +258,138 @@ p {
 
 .loading-dots span:nth-child(3) {
     animation-delay: 0.4s;
+}
+
+
+.mic-content {
+    width: 90%;
+    height: 80%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Center the waveform and text area */
+    padding-bottom: 60px; /* Add padding to provide space for the send button */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.close-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.waveform {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px; /* Adjust height as needed */
+    gap: 4px; /* Add spacing between bars */
+    margin-bottom: 20px; /* Add margin to separate from the transcription area */
+}
+
+.waveform .bar {
+    width: 5px;
+    height: 40px;
+    background-color: #EB8D42;
+    animation: wave 1.2s infinite ease-in-out;
+}
+
+.waveform .bar:nth-child(1) {
+    animation-delay: -1.2s;
+}
+
+.waveform .bar:nth-child(2) {
+    animation-delay: -1.1s;
+}
+
+.waveform .bar:nth-child(3) {
+    animation-delay: -1s;
+}
+
+.waveform .bar:nth-child(4) {
+    animation-delay: -0.9s;
+}
+
+.waveform .bar:nth-child(5) {
+    animation-delay: -0.8s;
+}
+
+@keyframes wave {
+    0%, 40%, 100% {
+        transform: scaleY(0.4);
+    }
+    20% {
+        transform: scaleY(1);
+    }
+}
+
+.mic-icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+#send-audio-button {
+    position: absolute; /* Position at the bottom */
+    bottom: 20px; /* Adjust to provide space from the bottom */
+    width: 50px;
+    height: 50px;
+    background-color: #EB8D42;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.send-icon {
+    width: 24px;
+    height: 24px;
+    margin: 0;
+}
+
+.modal-open {
+    overflow: hidden; /* Prevent background scrolling */
+}
+
+.round-button {
+    width: 40px;  /* Adjust size as needed */
+    height: 40px; /* Adjust size as needed */
+    background-color: #d3d3d3 !important; /* Gray background with !important */
+    border: none;
+    border-radius: 50%; /* Make it round */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 10px; /* Add margin */
+    padding: 0; /* Remove any padding */
+}
+
+#send-button {
+    padding: 10px 20px;
+    background: #EB8D42; /* Primary color for the button */
+    color: #fff; /* White text color */
+    border: none;
+    border-radius: 50px; /* Make the corners circular */
+    cursor: pointer;
+    font-family: 'Quicksand', sans-serif; /* Ensure button uses the font */
+    box-sizing: border-box; /* Ensure it does not overflow */
+}
+
+.transcription {
+    width: 80%; /* Full width */
+    height: 200px; /* Adjust height as needed */
+    margin-bottom: 20px; /* Add margin to separate from the send button */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: 'Quicksand', sans-serif;
+    box-sizing: border-box;
 }

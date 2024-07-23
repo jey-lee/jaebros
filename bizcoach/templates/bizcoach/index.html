@@ -23,16 +23,17 @@
                 <p class="greeting-text">What brought you here today?</p>
                 <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
                 <div class="suggestions">
-                    <div class="suggestion" data-question="What are the best practices for effective leadership?">What are the best practices for effective leadership?</div>
-                    <div class="suggestion" data-question="How can I handle conflict and difficult conversations within my team?">How can I handle conflict and difficult conversations within my team?</div>
-                    <div class="suggestion" data-question="How can I develop and retain top talent within my team?">How can I develop and retain top talent within my team?</div>
-                    <div class="suggestion" data-question="What techniques can I use to provide constructive feedback?">What techniques can I use to provide constructive feedback?</div>
+                    <div class="suggestion" data-question="I have an issue with one of my direct reports">I have an issue with one of my direct reports</div>
+                    <div class="suggestion" data-question="How can I give feedback in a constructive way?">How can I give feedback in a constructive way?</div>
+                    <div class="suggestion" data-question="How can I inspire someone who is not motivated?">How can I inspire someone who is not motivated?</div>
+                    <div class="suggestion" data-question="How can I improve performance within my team?">How can I improve performance within my team?</div>
                 </div>
             </div>
         </div>
         <div class="chat-input">
             <input type="text" id="message" placeholder="Type a message...">
             <button id="send-button">Send</button>
+            <button id="mic-button" class="round-button"><img src="{% static 'img/mic_icon.png' %}" alt="mic" class="mic-icon"></button> <!-- Add mic button -->
         </div>
     </div>
 
@@ -44,14 +45,43 @@
             <button id="cancel-reset">No</button>
         </div>
     </div>
+
+    <!-- Inline modal dialog for mic -->
+    <div id="mic-modal" class="modal">
+        <div class="modal-content mic-content">
+            <img src="{% static 'img/close_icon.png' %}" alt="close" class="close-icon" id="close-mic-modal">
+            <div class="waveform" id="waveform">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <textarea id="transcription" class="transcription" placeholder="Transcription will appear here..."></textarea>
+            <textarea id="audio_response" class="transcription" placeholder="Response will appear here..."></textarea>
+            <button id="send-audio-button"><img src="{% static 'img/send_icon.png' %}" alt="send" class="send-icon"></button>
+        </div>
+    </div>
+
+
     <script>
+        // Transcribe scripts
+        let stream = null;
+        let recording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        const transcriptionArea = document.getElementById('transcription');
+        const audioResponseArea = document.getElementById('audio_response');
+
+        // Configure marked with sanitize option
+        marked.setOptions({
+            gfm: true,
+            breaks: true
+        });
+
         $(document).ready(function() {
 
-            // Configure marked with sanitize option
-            marked.setOptions({
-                gfm: true,
-                breaks: true
-            });
+            
             
             function hideSuggestions() {
                 $('#greeting').remove();
@@ -85,6 +115,7 @@
                     // Send the message to the server
                     $.post("{% url 'send_message' %}", {
                         'message': message,
+                        'mode': 'text',
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     }, function(data) {
                         if (data.message) {
@@ -135,10 +166,10 @@
                         <p class="greeting-text">What brought you here today?</p>
                         <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
                         <div class="suggestions">
-                            <div class="suggestion" data-question="What are the best practices for effective leadership?">What are the best practices for effective leadership?</div>
-                            <div class="suggestion" data-question="How can I handle conflict and difficult conversations within my team?">How can I handle conflict and difficult conversations within my team?</div>
-                            <div class="suggestion" data-question="How can I develop and retain top talent within my team?">How can I develop and retain top talent within my team?</div>
-                            <div class="suggestion" data-question="What techniques can I use to provide constructive feedback?">What techniques can I use to provide constructive feedback?</div>
+                            <div class="suggestion" data-question="I have an issue with one of my direct reports">I have an issue with one of my direct reports</div>
+                            <div class="suggestion" data-question="How can I give feedback in a constructive way?">How can I give feedback in a constructive way?</div>
+                            <div class="suggestion" data-question="How can I inspire someone who is not motivated?">How can I inspire someone who is not motivated?</div>
+                            <div class="suggestion" data-question="How can I improve performance within my team?">How can I improve performance within my team?</div>
                         </div>
                     </div>`
                 );
@@ -151,7 +182,150 @@
             });
 
             bindSuggestionClick(); // Initial bind of click handler for suggestions
+
+            // Mic button click event
+            $('#mic-button').click(function() {
+                $('body').addClass('modal-open'); // Add this line
+                $('#mic-modal').css('display', 'flex');
+
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(mediaStream => {
+                    stream = mediaStream;
+                    recording = true;
+                    startRecording();
+                })
+                .catch(error => {
+                    console.error('Error accessing media devices:', error);
+                });
+            });
+
+            // Close mic modal
+            $('#close-mic-modal').click(function() {
+                $('body').removeClass('modal-open'); // Add this line
+                $('#mic-modal').css('display', 'none');
+                stopRecording();
+            });
+
+            // Send audio button click event (for demonstration purposes)
+            $('#send-audio-button').click(function() {
+                // Placeholder for sending audio functionality
+                //$('#mic-modal').css('display', 'none');
+                stopRecording();
+
+                // Send the message to the server
+                $.post("{% url 'send_message' %}", {
+                    'message': transcriptionArea.value,
+                    'mode': 'audio',
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                }, function(data) {
+                    if (data.message) {
+                        // Typing effect for the response message
+                        var cleanedResponse = data.response.replace(/【[^】]*】/g, '');
+                        var responseMessage = marked.parse(cleanedResponse);
+
+                        var plainTextResponse = $("<div>").html(responseMessage).text();
+                        $('#audio_response').val(plainTextResponse);
+
+                        // textToSpeech(plainTextResponse);
+                        
+                        // Play TTS audio
+                        playAudio(data.audio_url);
+                        
+                        //audioResponseArea.value = plainTextResponse;
+                    }
+                });
+            });
         });
+        
+        function validateAudioBlob(audioBlob) {
+            return new Promise((resolve, reject) => {
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
+
+                audio.oncanplaythrough = () => {
+                    resolve(true);
+                };
+
+                audio.onerror = () => {
+                    reject('Invalid audio data');
+                };
+
+                audio.load();
+            });
+        }
+
+        function startRecording() {
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            mediaRecorder.addEventListener('dataavailable', async event => {
+                audioChunks.push(event.data);
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                console.log('Audio chunk received:', event.data);
+                console.log('Blob size:', audioBlob.size);
+
+                try {
+                    const isValid = await validateAudioBlob(audioBlob);
+
+                    if (isValid) {
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob);
+
+                        console.log('Sending audio blob with size:', audioBlob.size);
+
+                        fetch('/transcribe/', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.transcription) {
+                                transcriptionArea.value += data.transcription + '\n';
+                            } else {
+                                console.log('Received undefined transcription, skipping');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error during transcription:', error);
+                        });
+
+                        audioChunks = [];
+                    } else {
+                        console.error('Invalid audio data, skipping chunk');
+                    }
+                } catch (error) {
+                    console.error('Error validating audio blob:', error);
+                }
+            });
+
+            mediaRecorder.start(); // Start recording
+
+            setTimeout(() => {
+                if (recording) {
+                    mediaRecorder.stop();
+                    startRecording(); // Start a new recording session
+                }
+            }, 3000); // Stop recording after 10 seconds
+        }
+
+        function stopRecording() {
+            recording = false;
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        }
+        function textToSpeech(text) {
+            var speechSynthesis = window.speechSynthesis;
+            var utterance = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(utterance);
+        }
+
+        function playAudio(audioUrl) {
+            var audio = new Audio(audioUrl);
+            audio.play();
+        }
+
     </script>
 </body>
 </html>
