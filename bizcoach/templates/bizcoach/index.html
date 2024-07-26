@@ -10,6 +10,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://sdk.symbl.ai/js/beta/symbl-web-sdk/latest/symbl.min.js"></script>
+    <script>
+        // START changing values here.
+        
+        const appId = '4952577559524e75365668384466654655496b4571565848446d65335171326b';
+        const appSecret = '59716135314245354e417663644e444a6b6f6e6a6f57793259595748537a4c585835584a366132375f6b634542646b78577241575961645a61316e6861634d7a';
+  
+        // STOP changing values here.
+        let connection;  // Declare the connection variable in a broader scope
+        const start = async () => {
+  
+        try {
+  
+            // Symbl recommends replacing the App ID and App Secret with an Access Token for authentication in production applications.
+            // For more information about authentication see https://docs.symbl.ai/docs/developer-tools/authentication/.
+            const symbl = new Symbl({
+                appId: appId,
+                appSecret: appSecret,
+                disconnectOnStopRequest: false, 
+                // accessToken: '<your Access Token>' // for production use
+            });
+            
+            // Open a Streaming API WebSocket Connection and start processing audio from your input device.
+            connection = await symbl.createAndStartNewConnection();
+  
+            // Retrieve the conversation ID for the conversation.
+            connection.on("conversation_created", (conversationData) => {
+              const conversationId = conversationData.data.conversationId;
+              console.log(`${conversationId}`);
+              document.querySelector("#conversationId").innerHTML = `${conversationId}`;
+              //document.querySelector("#startButton").setAttribute("disabled", "");
+            });
+  
+            // Retrieve real-time transcription from the conversation.
+            connection.on("speech_recognition", (speechData) => {
+              const name = speechData.user ? speechData.user.name : "User";
+              const transcript = speechData.punctuated.transcript;
+              console.log(`${name}: `, transcript);
+              document.querySelector("#speechRecognition").innerHTML = `${transcript}`;
+            });
+
+            connection.on("message", (data) => {
+                const finalTranscript = data[0].payload.content;
+                document.querySelector("#speechRecognition").innerHTML = `${finalTranscript}`;
+            // Handle data here.
+            });
+            
+            // This is a helper method for testing purposes.
+            // It waits 60 seconds before continuing to the next API call.
+            await Symbl.wait(600000);
+            
+            // Stops processing audio, but keeps the WebSocket connection open.
+            await connection.stopProcessing();
+            
+            // Closes the WebSocket connection.
+            connection.disconnect();
+  
+            //document.querySelector("#startButton").removeAttribute("disabled");
+        } catch(e) {
+            // Handle errors here.
+        }
+      }
+    </script>
 </head>
 <body>
     <div class="chat-container">
@@ -57,7 +120,9 @@
                 <div class="bar"></div>
                 <div class="bar"></div>
             </div>
-            <textarea id="transcription" class="transcription" placeholder="Transcription will appear here..."></textarea>
+            <div><b>Conversation ID:</b> <span id="conversationId">None</span></div>
+            <br>
+            <textarea id="speechRecognition" class="transcription" placeholder="Transcription will appear here..."></textarea>
             <textarea id="audio_response" class="transcription" placeholder="Response will appear here..."></textarea>
             <button id="send-audio-button"><img src="{% static 'img/send_icon.png' %}" alt="send" class="send-icon"></button>
         </div>
@@ -78,6 +143,15 @@
             gfm: true,
             breaks: true
         });
+
+        const playAudio = (audioUrl) => {
+            const audio = new Audio(audioUrl);
+            audio.onended = () => {
+                // Restart processing after audio has finished playing
+                start();
+            };
+            audio.play();
+        };
 
         $(document).ready(function() {
 
@@ -188,33 +262,49 @@
                 $('body').addClass('modal-open'); // Add this line
                 $('#mic-modal').css('display', 'flex');
 
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(mediaStream => {
-                    stream = mediaStream;
-                    recording = true;
-                    startRecording();
-                })
-                .catch(error => {
-                    console.error('Error accessing media devices:', error);
-                });
+                //Symbl Version
+                start();
+
+                // FFMPEG Version
+                //navigator.mediaDevices.getUserMedia({ audio: true })
+                //.then(mediaStream => {
+                //    stream = mediaStream;
+                //    recording = true;
+                //    startRecording();
+                //})
+                //.catch(error => {
+                //    console.error('Error accessing media devices:', error);
+                //});
             });
 
             // Close mic modal
             $('#close-mic-modal').click(function() {
                 $('body').removeClass('modal-open'); // Add this line
                 $('#mic-modal').css('display', 'none');
-                stopRecording();
+                
+                //stopRecording();
             });
 
             // Send audio button click event (for demonstration purposes)
             $('#send-audio-button').click(function() {
                 // Placeholder for sending audio functionality
                 //$('#mic-modal').css('display', 'none');
-                stopRecording();
+                
+                
+                //FFMpeg Version
+                //stopRecording();
+
+                // Symbl Version
+                if (connection) {
+                    connection.stopProcessing({
+                        disconnectOnStopRequest: false  // Hypothetical option
+                    });  // Stop processing without disconnecting
+                }
 
                 // Send the message to the server
                 $.post("{% url 'send_message' %}", {
-                    'message': transcriptionArea.value,
+                    //'message': transcriptionArea.value,
+                    'message': document.querySelector("#speechRecognition").innerHTML,
                     'mode': 'audio',
                     'csrfmiddlewaretoken': '{{ csrf_token }}'
                 }, function(data) {
@@ -230,102 +320,15 @@
                         
                         // Play TTS audio
                         playAudio(data.audio_url);
-                        
+
+                        if (connection) {
+                            //connection.startProcessing();  // Use the connection variable
+                        }
                         //audioResponseArea.value = plainTextResponse;
                     }
                 });
             });
         });
-        
-        function validateAudioBlob(audioBlob) {
-            return new Promise((resolve, reject) => {
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const audio = new Audio(audioUrl);
-
-                audio.oncanplaythrough = () => {
-                    resolve(true);
-                };
-
-                audio.onerror = () => {
-                    reject('Invalid audio data');
-                };
-
-                audio.load();
-            });
-        }
-
-        function startRecording() {
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
-
-            mediaRecorder.addEventListener('dataavailable', async event => {
-                audioChunks.push(event.data);
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                console.log('Audio chunk received:', event.data);
-                console.log('Blob size:', audioBlob.size);
-
-                try {
-                    const isValid = await validateAudioBlob(audioBlob);
-
-                    if (isValid) {
-                        const formData = new FormData();
-                        formData.append('audio', audioBlob);
-
-                        console.log('Sending audio blob with size:', audioBlob.size);
-
-                        fetch('/transcribe/', {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.transcription) {
-                                transcriptionArea.value += data.transcription + '\n';
-                            } else {
-                                console.log('Received undefined transcription, skipping');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error during transcription:', error);
-                        });
-
-                        audioChunks = [];
-                    } else {
-                        console.error('Invalid audio data, skipping chunk');
-                    }
-                } catch (error) {
-                    console.error('Error validating audio blob:', error);
-                }
-            });
-
-            mediaRecorder.start(); // Start recording
-
-            setTimeout(() => {
-                if (recording) {
-                    mediaRecorder.stop();
-                    startRecording(); // Start a new recording session
-                }
-            }, 3000); // Stop recording after 10 seconds
-        }
-
-        function stopRecording() {
-            recording = false;
-            if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-            }
-        }
-        function textToSpeech(text) {
-            var speechSynthesis = window.speechSynthesis;
-            var utterance = new SpeechSynthesisUtterance(text);
-            speechSynthesis.speak(utterance);
-        }
-
-        function playAudio(audioUrl) {
-            var audio = new Audio(audioUrl);
-            audio.play();
-        }
-
     </script>
 </body>
 </html>

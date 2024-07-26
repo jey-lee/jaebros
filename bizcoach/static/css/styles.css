@@ -393,3 +393,16 @@ p {
     font-family: 'Quicksand', sans-serif;
     box-sizing: border-box;
 }
+
+.loading-animation {
+    font-size: 18px;
+    color: #545251;
+    margin-top: 20px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    50% { opacity: 1; }
+    100% { opacity: 0.2; }
+}

@@ -1,17 +1,14 @@
 import openai
 from pathlib import Path
-
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
-import whisper
-import logging
 import threading
 import os
-import subprocess
 import requests
+from google.cloud import storage
+from datetime import datetime
 
 
 
@@ -20,15 +17,6 @@ client = openai
 
 leap_assistant = client.beta.assistants.retrieve("asst_pr7frjRKV8gKLStqf7r9EkHK")
 thread = client.beta.threads.create()
-
-# Set the full path to ffmpeg
-os.environ["PATH"] += os.pathsep + "/opt/homebrew/bin"
-
-# Load the Whisper model
-model = whisper.load_model("base")
-
-# Set up logging
-logger = logging.getLogger(__name__)
 
 # Function to call the OpenAI API
 def call_openai_api_assistant(prompt, response_list):
@@ -79,6 +67,8 @@ def send_message(request):
         message_chat = request.POST.get('message', '')
         mode = request.POST.get('mode', '')
 
+        print(message_chat)
+
         prompt = message_chat
         response_list = []
 
@@ -98,10 +88,12 @@ def send_message(request):
         response = result
 
         # Call OpenAI TTS API
+        print(mode)
         if mode == 'audio':
             audio_url = get_tts_audio(response)
         else:
             audio_url = ''
+        print(audio_url)
 
         return JsonResponse({
             'message': message_chat, 
@@ -111,6 +103,12 @@ def send_message(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def get_tts_audio(text):
+    # Initialize a Cloud Storage client
+    storage_client = storage.Client()
+    bucket = storage_client.bucket('jaebros.appspot.com')
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S") 
+
+
     speech_file_path = Path(__file__).parent / "static" / "audio" / "speech.mp3"
 
     response = client.audio.speech.create(
@@ -119,64 +117,23 @@ def get_tts_audio(text):
         speed= 1.1,
         input=text
     )
-    response.stream_to_file(speech_file_path)
-    return os.path.join('/static/audio/speech.mp3')
 
-@csrf_exempt
-def transcribe(request):
-    if request.method == 'POST' and request.FILES['audio']:
-        try:
-            audio_file = request.FILES['audio']
-            file_name = default_storage.save(audio_file.name, audio_file)
-            file_path = default_storage.path(file_name)
+    # Get audio content as bytes
+    audio_content = response.content
+    #filename = "speech.mp3"+timestamp
+    filename = f"speech-{timestamp}.mp3" 
 
-            print(file_name + "/" + file_path)
+    blob = bucket.blob(filename)
 
-            # Log the MIME type, file extension, and file size
-            mime_type = audio_file.content_type
-            file_extension = os.path.splitext(file_name)[1]
-            file_size = audio_file.size
-            logger.info(f"Received audio file with MIME type: {mime_type}, extension: {file_extension}, size: {file_size} bytes")
+    # Delete the existing blob if it exists
+    if blob.exists():
+        blob.delete()
 
-            # Print the first few bytes of the file for debugging
-            with open(file_path, 'rb') as f:
-                file_head = f.read(100)
-                logger.info(f"File head: {file_head}")
+    # Upload speech to Cloud Storage
+    blob.upload_from_string(audio_content, content_type="audio/mpeg")
 
-            # Log additional debug info
-            logger.debug(f"File path: {file_path}")
-            wav_file_path = file_path + '.wav'
-            command = f"ffmpeg -i {file_path} -ac 1 -ar 16000 -f wav {wav_file_path}"
-            logger.debug(f"Running command: {command}")
+    # Make file public (optional)
+    blob.make_public()
 
-            # Run ffmpeg command and log output
-            result = subprocess.run(command, shell=True, capture_output=True, text=True)
-            logger.debug(f"ffmpeg stdout: {result.stdout}")
-            logger.debug(f"ffmpeg stderr: {result.stderr}")
-
-            if result.returncode != 0:
-                raise subprocess.CalledProcessError(result.returncode, command)
-
-            # Check if the WAV file was created successfully
-            if not os.path.exists(wav_file_path):
-                raise FileNotFoundError(f"WAV file was not created: {wav_file_path}")
-
-            # Transcribe audio using Whisper
-            result = model.transcribe(wav_file_path)
-            transcription = result['text']
-            print (transcription)
-
-            # Clean up the stored files
-            default_storage.delete(file_name)
-            if os.path.exists(wav_file_path):
-                os.remove(wav_file_path)
-
-            return JsonResponse({'transcription': transcription})
-        except subprocess.CalledProcessError as e:
-            logger.error(f"ffmpeg error: {e.stderr}")
-            return JsonResponse({'error': f"ffmpeg error: {e.stderr}"}, status=500)
-        except Exception as e:
-            logger.error(f"Error transcribing audio: {e}")
-            return JsonResponse({'error': str(e)}, status=500)
-
-    return JsonResponse({'error': 'Invalid request'}, status=400)
+    # response.stream_to_file(speech_file_path)
+    return blob.public_url 
