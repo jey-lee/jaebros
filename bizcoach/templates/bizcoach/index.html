@@ -1,162 +1,130 @@
-<!-- templates/bizcoach/index.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JS1E4EMFJ9"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-JS1E4EMFJ9');
+    </script>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Leap Coaching</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://sdk.symbl.ai/js/beta/symbl-web-sdk/latest/symbl.min.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+
     <script>
         // START changing values here.
-        
         const appId = '4952577559524e75365668384466654655496b4571565848446d65335171326b';
         const appSecret = '59716135314245354e417663644e444a6b6f6e6a6f57793259595748537a4c585835584a366132375f6b634542646b78577241575961645a61316e6861634d7a';
   
         // STOP changing values here.
         let connection;  // Declare the connection variable in a broader scope
-        const start = async () => {
-  
-        try {
-  
-            // Symbl recommends replacing the App ID and App Secret with an Access Token for authentication in production applications.
-            // For more information about authentication see https://docs.symbl.ai/docs/developer-tools/authentication/.
-            const symbl = new Symbl({
-                appId: appId,
-                appSecret: appSecret,
-                disconnectOnStopRequest: false, 
-                // accessToken: '<your Access Token>' // for production use
-            });
-            
-            // Open a Streaming API WebSocket Connection and start processing audio from your input device.
-            connection = await symbl.createAndStartNewConnection();
-  
-            // Retrieve the conversation ID for the conversation.
-            connection.on("conversation_created", (conversationData) => {
-              const conversationId = conversationData.data.conversationId;
-              console.log(`${conversationId}`);
-              document.querySelector("#conversationId").innerHTML = `${conversationId}`;
-              //document.querySelector("#startButton").setAttribute("disabled", "");
-            });
-  
-            // Retrieve real-time transcription from the conversation.
-            connection.on("speech_recognition", (speechData) => {
-              const name = speechData.user ? speechData.user.name : "User";
-              const transcript = speechData.punctuated.transcript;
-              console.log(`${name}: `, transcript);
-              document.querySelector("#speechRecognition").innerHTML = `${transcript}`;
-            });
-
-            connection.on("message", (data) => {
-                const finalTranscript = data[0].payload.content;
-                document.querySelector("#speechRecognition").innerHTML = `${finalTranscript}`;
-            // Handle data here.
-            });
-            
-            // This is a helper method for testing purposes.
-            // It waits 60 seconds before continuing to the next API call.
-            await Symbl.wait(600000);
-            
-            // Stops processing audio, but keeps the WebSocket connection open.
-            await connection.stopProcessing();
-            
-            // Closes the WebSocket connection.
-            connection.disconnect();
-  
-            //document.querySelector("#startButton").removeAttribute("disabled");
-        } catch(e) {
-            // Handle errors here.
-        }
-      }
-    </script>
-</head>
-<body>
-    <div class="chat-container">
-        <div class="chat-header">
-            <a href="{% url 'index' %}" class="header-link">LEAP</a>
-            <img src="{% static 'img/reset_icon.png' %}" alt="reset" class="reset-icon" id="reset-chat">
-        </div>
-        <div class="chat-messages" id="chat-messages">
-            <div id="greeting" class="center-content">
-                <p class="greeting-text">Hi there!</p>
-                <p class="greeting-text">What brought you here today?</p>
-                <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
-                <div class="suggestions">
-                    <div class="suggestion" data-question="I have an issue with one of my direct reports">I have an issue with one of my direct reports</div>
-                    <div class="suggestion" data-question="How can I give feedback in a constructive way?">How can I give feedback in a constructive way?</div>
-                    <div class="suggestion" data-question="How can I inspire someone who is not motivated?">How can I inspire someone who is not motivated?</div>
-                    <div class="suggestion" data-question="How can I improve performance within my team?">How can I improve performance within my team?</div>
-                </div>
-            </div>
-        </div>
-        <div class="chat-input">
-            <input type="text" id="message" placeholder="Type a message...">
-            <button id="send-button">Send</button>
-            <button id="mic-button" class="round-button"><img src="{% static 'img/mic_icon.png' %}" alt="mic" class="mic-icon"></button> <!-- Add mic button -->
-        </div>
-    </div>
-
-    <!-- Inline modal dialog -->
-    <div id="reset-modal" class="modal">
-        <div class="modal-content">
-            <p>Are you sure you want to clear the chat history and start from scratch?</p>
-            <button id="confirm-reset">Yes</button>
-            <button id="cancel-reset">No</button>
-        </div>
-    </div>
-
-    <!-- Inline modal dialog for mic -->
-    <div id="mic-modal" class="modal">
-        <div class="modal-content mic-content">
-            <img src="{% static 'img/close_icon.png' %}" alt="close" class="close-icon" id="close-mic-modal">
-            <div class="waveform" id="waveform">
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-                <div class="bar"></div>
-            </div>
-            <div><b>Conversation ID:</b> <span id="conversationId">None</span></div>
-            <br>
-            <textarea id="speechRecognition" class="transcription" placeholder="Transcription will appear here..."></textarea>
-            <textarea id="audio_response" class="transcription" placeholder="Response will appear here..."></textarea>
-            <button id="send-audio-button"><img src="{% static 'img/send_icon.png' %}" alt="send" class="send-icon"></button>
-        </div>
-    </div>
-
-
-    <script>
-        // Transcribe scripts
         let stream = null;
-        let recording = false;
-        let mediaRecorder = null;
-        let audioChunks = [];
-        const transcriptionArea = document.getElementById('transcription');
-        const audioResponseArea = document.getElementById('audio_response');
 
-        // Configure marked with sanitize option
-        marked.setOptions({
-            gfm: true,
-            breaks: true
-        });
+        const start = async () => {
+            try {
+                const symbl = new Symbl({
+                    appId: appId,
+                    appSecret: appSecret,
+                });
+                
+                // Open a Streaming API WebSocket Connection and start processing audio from your input device.
+                connection = await symbl.createAndStartNewConnection();
 
-        const playAudio = (audioUrl) => {
-            const audio = new Audio(audioUrl);
-            audio.onended = () => {
-                // Restart processing after audio has finished playing
-                start();
-            };
-            audio.play();
+                // Get the media stream
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                // Retrieve the conversation ID for the conversation.
+                connection.on("conversation_created", (conversationData) => {
+                    document.getElementById("dotlottie-loading").style.display = "none"; // Hide the Lottie animation
+                    document.getElementById("dotlottie-listening").style.display = "block"; // Show the waveform
+                    document.getElementById("dotlottie-speaking").style.display = "none"; // Show the waveform
+
+                    document.getElementById("connecting-text").style.display = "none";
+                    document.getElementById("listening-text").style.display = "block";
+                    document.getElementById("speaking-text").style.display = "none";
+
+                    const conversationId = conversationData.data.conversationId;
+                    console.log(`${conversationId}`);
+                    document.querySelector("#conversationId").innerHTML = `${conversationId}`;
+                });
+
+                // Retrieve real-time transcription from the conversation.
+                connection.on("speech_recognition", (speechData) => {
+                    const name = speechData.user ? speechData.user.name : "User";
+                    const transcript = speechData.punctuated.transcript;
+                    console.log(`${name}: `, transcript);
+                    document.querySelector("#speechRecognition").innerHTML = `${transcript}`;
+                });
+
+                connection.on("message", (data) => {
+                    const finalTranscript = data[0].payload.content;
+                    document.querySelector("#speechRecognition").innerHTML = `${finalTranscript}`;
+                    connection.stopProcessing({
+                        disconnectOnStopRequest: false
+                    });
+                    sendAudio();
+                });
+
+            } catch (e) {
+                // Handle errors here.
+                console.error(e);
+            }
         };
 
-        $(document).ready(function() {
+        const stopMediaStream = () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        };
 
-            
-            
+        const disconnectConnection = () => {
+            if (connection) {
+                connection.stopProcessing();
+                connection.disconnect();
+                connection = null;
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const micContent = document.getElementById("mic-content");
+            if (micContent) {
+                micContent.addEventListener("click", () => {
+                    event.stopPropagation();
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.currentTime = 0;
+                        currentAudio = null;
+
+                        document.getElementById("dotlottie-loading").style.display = "block"; // Hide the Lottie animation
+                        document.getElementById("dotlottie-listening").style.display = "none"; // Show the waveform
+                        document.getElementById("dotlottie-speaking").style.display = "none"; // Show the waveform
+
+                        document.getElementById("connecting-text").style.display = "block";
+                        document.getElementById("listening-text").style.display = "none";
+                        document.getElementById("speaking-text").style.display = "none";
+
+                        // Start a new Symbl connection
+                        disconnectConnection();
+                        stopMediaStream();
+                        start();
+                    }
+                });
+            }
+
             function hideSuggestions() {
                 $('#greeting').remove();
             }
@@ -174,7 +142,7 @@
                 var message = $('#message').val();
                 if (message.trim() !== '') {
                     hideSuggestions();
-                    
+
                     // Append the user's message immediately
                     $('#chat-messages').append('<div class="message-container right"><div class="message right">' + marked.parse(message) + '</div></div>');
                     $('#message').val('');
@@ -261,74 +229,164 @@
             $('#mic-button').click(function() {
                 $('body').addClass('modal-open'); // Add this line
                 $('#mic-modal').css('display', 'flex');
+                $('#connecting-text').css('display', 'block');
+                $('#listening-text').css('display', 'none');
+                $('#speaking-text').css('display', 'none');
 
-                //Symbl Version
+                document.getElementById("dotlottie-loading").style.display = "block"; // Show the Lottie animation
+                document.getElementById("dotlottie-listening").style.display = "none";
+                document.getElementById("dotlottie-speaking").style.display = "none";
+
+                //Symbl Start
                 start();
-
-                // FFMPEG Version
-                //navigator.mediaDevices.getUserMedia({ audio: true })
-                //.then(mediaStream => {
-                //    stream = mediaStream;
-                //    recording = true;
-                //    startRecording();
-                //})
-                //.catch(error => {
-                //    console.error('Error accessing media devices:', error);
-                //});
             });
 
             // Close mic modal
             $('#close-mic-modal').click(function() {
+                event.stopPropagation();
                 $('body').removeClass('modal-open'); // Add this line
                 $('#mic-modal').css('display', 'none');
-                
-                //stopRecording();
+
+                disconnectConnection();
+                stopMediaStream();
             });
 
             // Send audio button click event (for demonstration purposes)
             $('#send-audio-button').click(function() {
-                // Placeholder for sending audio functionality
-                //$('#mic-modal').css('display', 'none');
-                
-                
-                //FFMpeg Version
-                //stopRecording();
-
-                // Symbl Version
-                if (connection) {
-                    connection.stopProcessing({
-                        disconnectOnStopRequest: false  // Hypothetical option
-                    });  // Stop processing without disconnecting
-                }
-
-                // Send the message to the server
-                $.post("{% url 'send_message' %}", {
-                    //'message': transcriptionArea.value,
-                    'message': document.querySelector("#speechRecognition").innerHTML,
-                    'mode': 'audio',
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                }, function(data) {
-                    if (data.message) {
-                        // Typing effect for the response message
-                        var cleanedResponse = data.response.replace(/【[^】]*】/g, '');
-                        var responseMessage = marked.parse(cleanedResponse);
-
-                        var plainTextResponse = $("<div>").html(responseMessage).text();
-                        $('#audio_response').val(plainTextResponse);
-
-                        // textToSpeech(plainTextResponse);
-                        
-                        // Play TTS audio
-                        playAudio(data.audio_url);
-
-                        if (connection) {
-                            //connection.startProcessing();  // Use the connection variable
-                        }
-                        //audioResponseArea.value = plainTextResponse;
-                    }
-                });
+                sendAudio();
             });
         });
+
+        let currentAudio = null;
+
+        const playAudio = (audioUrl) => {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+
+            currentAudio = new Audio(audioUrl);
+            const lottieSpeaking = document.getElementById("dotlottie-speaking");
+            const lottieLoading = document.getElementById("dotlottie-loading");
+
+            const connectingText = document.getElementById("connecting-text");
+            const listeningText = document.getElementById("listening-text");
+            const speakingText = document.getElementById("speaking-text");
+
+            // Show the speaking animation
+            lottieSpeaking.style.display = "block";
+            speakingText.style.display = "block";
+
+            currentAudio.onended = () => {
+                lottieSpeaking.style.display = "none";
+                speakingText.style.display = "none";
+
+                lottieLoading.style.display = "block";
+                connectingText.style.display = "block";
+                // Restart processing after audio has finished playing
+                start();
+            };
+
+            currentAudio.play();
+        };
+
+        function sendAudio() {
+            document.getElementById("dotlottie-loading").style.display = "block";
+            document.getElementById("dotlottie-listening").style.display = "none";
+            document.getElementById("dotlottie-speaking").style.display = "none";
+
+            document.getElementById("connecting-text").style.display = "block";
+            document.getElementById("listening-text").style.display = "none";
+            document.getElementById("speaking-text").style.display = "none";
+
+            // Send the message to the server
+            $.post("{% url 'send_message' %}", {
+                'message': document.querySelector("#speechRecognition").innerHTML,
+                'mode': 'audio',
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            }, function(data) {
+                if (data.message) {
+                    var cleanedResponse = data.response.replace(/【[^】]*】/g, '');
+                    var responseMessage = marked.parse(cleanedResponse);
+                    var plainTextResponse = $("<div>").html(responseMessage).text();
+                    $('#audio_response').val(plainTextResponse);
+
+                    document.getElementById("dotlottie-loading").style.display = "none"; // Hide the Lottie animation
+                    document.getElementById("dotlottie-listening").style.display = "none";
+
+                    document.getElementById("connecting-text").style.display = "none";
+                    document.getElementById("listening-text").style.display = "none";
+
+                    playAudio(data.audio_url);
+                }
+            });
+        }
+
+
     </script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <a href="{% url 'index' %}" class="header-link">LEAP</a>
+            <img src="{% static 'img/reset_icon.png' %}" alt="reset" class="reset-icon" id="reset-chat">
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div id="greeting" class="center-content">
+                <p class="greeting-text">Hi there!</p>
+                <p class="greeting-text">What brought you here today?</p>
+                <p class="intro-text">Below are a few popular questions from people managers for your reference:</p>
+                <div class="suggestions">
+                    <div class="suggestion" data-question="I have an issue with one of my direct reports">I have an issue with one of my direct reports</div>
+                    <div class="suggestion" data-question="How can I give feedback in a constructive way?">How can I give feedback in a constructive way?</div>
+                    <div class="suggestion" data-question="How can I inspire someone who is not motivated?">How can I inspire someone who is not motivated?</div>
+                    <div class="suggestion" data-question="How can I improve performance within my team?">How can I improve performance within my team?</div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="message" placeholder="Type a message...">
+            <button id="send-button">Send</button>
+            <button id="mic-button" class="round-button"><img src="{% static 'img/mic_icon.png' %}" alt="mic" class="mic-icon"></button>
+        </div>
+    </div>
+
+    <!-- Inline modal dialog -->
+    <div id="reset-modal" class="modal">
+        <div class="modal-content">
+            <p>Are you sure you want to clear the chat history and start from scratch?</p>
+            <button id="confirm-reset">Yes</button>
+            <button id="cancel-reset">No</button>
+        </div>
+    </div>
+
+    <!-- Inline modal dialog for mic -->
+    <div id="mic-modal" class="modal">
+        <div class="modal-content mic-content" id="mic-content">
+            <img src="{% static 'img/close_icon.png' %}" alt="close" class="close-icon" id="close-mic-modal">
+            <dotlottie-player id="dotlottie-loading" src="https://lottie.host/f8a532bd-8281-4732-b54d-8771d0b7d925/tZd3Y1MfrF.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></dotlottie-player>
+            <div id="connecting-text" class="blinking-text">Connecting...</div>
+
+            <dotlottie-player id="dotlottie-listening" src="https://lottie.host/8ae87535-0e9c-4692-b243-7e7ebd4caded/EU46HsjKJW.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></dotlottie-player>
+            <div id="listening-text" class="blinking-text" style="display: none;">Listening...</div>
+
+            <dotlottie-player id="dotlottie-speaking" src="https://lottie.host/0cb6079d-9ace-4eed-9d29-435a74a58e5a/6ahVHRiGrx.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></dotlottie-player>
+            <div id="speaking-text" class="blinking-text" style="display: none;">Tap to interrupt</div>
+
+            <div class="waveform" id="waveform">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+            <div class="hidden"><b>Conversation ID:</b> <span id="conversationId">None</span></div>
+            <br>
+            <textarea id="speechRecognition" class="transcription hidden" placeholder="Transcription will appear here..."></textarea>
+            <textarea id="audio_response" class="transcription hidden" placeholder="Response will appear here..."></textarea>
+            <button id="send-audio-button" class="hidden"><img src="{% static 'img/send_icon.png' %}" alt="send" class="send-icon"></button>
+        </div>
+    </div>
+
 </body>
 </html>

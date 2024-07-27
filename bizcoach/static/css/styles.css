@@ -263,13 +263,13 @@ p {
 
 .mic-content {
     width: 90%;
-    height: 80%;
+    height: 50%;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center; /* Center the waveform and text area */
-    padding-bottom: 60px; /* Add padding to provide space for the send button */
+    /* padding-bottom: 60px;  Add padding to provide space for the send button */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
@@ -289,6 +289,7 @@ p {
     height: 100px; /* Adjust height as needed */
     gap: 4px; /* Add spacing between bars */
     margin-bottom: 20px; /* Add margin to separate from the transcription area */
+    display: none; /* Hide by default */
 }
 
 .waveform .bar {
@@ -346,6 +347,13 @@ p {
     align-items: center;
     justify-content: center;
     padding: 0;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+/* Change background color and slightly scale down when active */
+#send-audio-button:active {
+    background-color: #d97c39; /* Slightly darker color */
+    transform: scale(0.75); /* Slightly smaller */
 }
 
 .send-icon {
@@ -394,15 +402,46 @@ p {
     box-sizing: border-box;
 }
 
-.loading-animation {
-    font-size: 18px;
-    color: #545251;
-    margin-top: 20px;
-    animation: blink 1s infinite;
+.dotlottie-loading {
+    display: none; /* Hide by default */
 }
 
-@keyframes blink {
-    0% { opacity: 0.2; }
-    50% { opacity: 1; }
-    100% { opacity: 0.2; }
+.dotlottie-listening {
+    display: none; /* Hide by default */
+}
+
+.dotlottie-speaking {
+    display: none; /* Hide by default */
+}
+
+.hidden {
+    display: none; /* Hide the elements */
+    visibility: hidden; /* Ensure they are not visible */
+    position: absolute; /* Remove them from the layout flow */
+    z-index: -1; /* Send them to the back */
+    opacity: 0; /* Make them fully transparent */
+    pointer-events: none; /* Prevent any interaction */
+}
+
+#connecting-text.blinking-text, 
+#listening-text.blinking-text, 
+#speaking-text.blinking-text {
+    font-size: 18px;
+    color: #545251;
+    text-align: center;
+    margin-top: 10px;
+    animation: blinker 1s linear infinite !important;
+}
+
+@keyframes blinker {
+    80% { opacity: 0.6; }
+}
+
+input[type="text"] {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+}
+
+.chat-input input[type="text"] {
+    font-size: 16px; /* Ensure minimum font size to prevent zoom */
 }

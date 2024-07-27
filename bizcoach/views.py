@@ -9,8 +9,7 @@ import os
 import requests
 from google.cloud import storage
 from datetime import datetime
-
-
+from .models import Conversation
 
 openai.api_key = settings.OPENAI_KEY
 client = openai
@@ -41,24 +40,6 @@ def call_openai_api_assistant(prompt, response_list):
     except Exception as e:
         response_list.append(f"Error: {e}")
 
-# Function to call the OpenAI API
-def call_openai_api(prompt, response_list):
-    print('### Prompt : ' + prompt)
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a biz coach. keep your response short to one or two sentence and follow up with a question"},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=1500,
-        )
-        result = response.choices[0].message.content
-        print(result)
-        response_list.append(result)
-    except Exception as e:
-        response_list.append(f"Error: {e}")
-
 def index(request):
     return render(request, 'bizcoach/index.html')
 
@@ -66,8 +47,6 @@ def send_message(request):
     if request.method == 'POST':
         message_chat = request.POST.get('message', '')
         mode = request.POST.get('mode', '')
-
-        print(message_chat)
 
         prompt = message_chat
         response_list = []
@@ -87,13 +66,19 @@ def send_message(request):
 
         response = result
 
+        # Save the conversation data to the database
+        Conversation.objects.create(
+            thread_id=thread.id,
+            prompt=prompt,
+            response=response,
+            timestamp=datetime.now()
+        )
+
         # Call OpenAI TTS API
-        print(mode)
         if mode == 'audio':
             audio_url = get_tts_audio(response)
         else:
             audio_url = ''
-        print(audio_url)
 
         return JsonResponse({
             'message': message_chat, 
